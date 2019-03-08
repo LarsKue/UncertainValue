@@ -1,6 +1,7 @@
 """
 Scripted By: Lars Kühmichel
 License: MIT License
+GitHub: https://github.com/LarsKue/UncertainValue
 """
 
 import numpy as np
