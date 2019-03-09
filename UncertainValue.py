@@ -25,9 +25,10 @@ class UncertainValue:
     __uncertainty = 0
     __printprecision = 6
     __automaticprintprecision = True
+    __enable_mean_instantiation = True
 
     def __init__(self, *args):
-        if len(args) > 2 or type(args) is list:
+        if self.__enable_mean_instantiation and (len(args) > 2 or type(args) is list):
             # instantiation of average value and mean error of the mean from measurements
             self.__value = float(sum(args)) / len(args)
             self.__uncertainty = np.sqrt(
@@ -50,7 +51,7 @@ class UncertainValue:
     @staticmethod
     def average(valuelist):
         s = UncertainValue.sum(valuelist)
-        return s / UncertainValue(len(valuelist), 0)
+        return s / len(valuelist)
 
     @staticmethod
     def np_abs_u(valuelist):
@@ -94,6 +95,14 @@ class UncertainValue:
     def arctan(x):
         return UncertainValue(np.arctan(x.value()), x.absolute_u() / (square(x.value()) + 1))
 
+    @staticmethod
+    def sqrt(x):
+        return UncertainValue(np.sqrt(x.value()), x.absolute_u() / (2 * np.sqrt(x.value())))
+
+    @staticmethod
+    def log(x):
+        return UncertainValue(np.log(x.value()), x.absolute_u() / x.value())
+
     def value(self):
         return self.__value
 
@@ -114,6 +123,9 @@ class UncertainValue:
 
     def set_automatic_print_precision(self, val):
         self.__automaticprintprecision = val
+
+    def set_enable_mean_instantiation(self, val):
+        self.__enable_mean_instantiation = val
 
     def __abs__(self):
         return UncertainValue(abs(self.__value), self.__uncertainty)
@@ -192,6 +204,13 @@ class UncertainValue:
         self.__uncertainty = self.__value / other.value() * np.sqrt(
             square(self.relative_u()) + square(other.relative_u()))
         return self
+
+    def __pow__(self, power, modulo=None):
+        if isinstance(power, (int, float)):
+            return UncertainValue(self.__value ** power, self.__uncertainty * power * self.__value ** (power - 1))
+        return UncertainValue(self.__value ** power.value(), np.sqrt(
+            (self.__uncertainty * power.value() * self.__value ** (power.value() - 1)) ** 2 + (
+                        power.absolute_u() * np.log(power.value()) * self.__value ** power.value()) ** 2))
 
     """
     DISCLAIMER:
